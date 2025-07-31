@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🎮 Kiddy AI Backend
 
 A **child-safe AI companion** with voice interaction, emotional intelligence, and local data storage. Built with FastAPI, Google Gemini, and speech recognition.
@@ -211,3 +212,7 @@ For issues and questions:
 ---
 
 **Made with ❤️ for kids' safety and learning** 
+=======
+# kiddy-ai-backend
+Backend server for Kiddy, the AI-powered emotional companion app for kids. Includes GPT interaction, safety filtering, and TTS integration.
+>>>>>>> 219f64db0d985dc74ffb4cc90acda597cdf5c12a
