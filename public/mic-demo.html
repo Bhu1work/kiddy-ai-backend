@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiddy AI Demo</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .chat-area {
+            height: 300px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            overflow-y: auto;
+            background-color: #fafafa;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .user-message {
+            background-color: #e3f2fd;
+            text-align: right;
+        }
+        .ai-message {
+            background-color: #f3e5f5;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .record-btn {
+            background-color: #ff4444;
+            color: white;
+        }
+        .record-btn:hover {
+            background-color: #cc0000;
+        }
+        .record-btn.recording {
+            background-color: #00cc00;
+        }
+        .send-btn {
+            background-color: #2196f3;
+            color: white;
+        }
+        .send-btn:hover {
+            background-color: #1976d2;
+        }
+        .setup-btn {
+            background-color: #4caf50;
+            color: white;
+        }
+        .setup-btn:hover {
+            background-color: #388e3c;
+        }
+        input, select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .setup-form {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .setup-form input {
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .audio-player {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Kiddy AI Demo</h1>
+        
+        <!-- Setup Form -->
+        <div class="setup-form">
+            <h3>Setup Session</h3>
+            <input type="text" id="kidName" placeholder="Kid's name" value="Alex">
+            <input type="number" id="kidAge" placeholder="Age (5-10)" value="7" min="5" max="10">
+            <input type="text" id="buddyName" placeholder="Buddy name" value="Sparkle">
+            <button class="setup-btn" onclick="setupSession()">Setup Session</button>
+        </div>
+
+        <!-- Status -->
+        <div id="status" class="status" style="display: none;"></div>
+
+        <!-- Chat Area -->
+        <div class="chat-area" id="chatArea">
+            <div class="message ai-message">
+                Hi! I'm your AI buddy. Click "Setup Session" to get started!
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="record-btn" id="recordBtn" onclick="toggleRecording()" disabled>
+                🎤 Start Recording
+            </button>
+            <input type="text" id="messageInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="sendMessage()" disabled>Send</button>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+
+        function showStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${isError ? 'error' : 'success'}`;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+
+        async function setupSession() {
+            const kidName = document.getElementById('kidName').value;
+            const kidAge = parseInt(document.getElementById('kidAge').value);
+            const buddyName = document.getElementById('buddyName').value;
+
+            if (!kidName || !kidAge || !buddyName) {
+                showStatus('Please fill in all fields', true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/v1/setup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        kid_name: kidName,
+                        age: kidAge,
+                        buddy_name: buddyName
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    sessionId = data.session_id;
+                    showStatus('Session created successfully!');
+                    
+                    // Enable controls
+                    document.getElementById('recordBtn').disabled = false;
+                    document.getElementById('messageInput').disabled = false;
+                    document.querySelector('.send-btn').disabled = false;
+                    
+                    addMessage(`Hi ${kidName}! I'm ${buddyName}, your AI buddy! Let's chat!`, 'ai');
+                } else {
+                    showStatus('Failed to create session', true);
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, true);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !sessionId) return;
+
+            addMessage(message, 'user');
+            input.value = '';
+
+            try {
+                const response = await fetch('/v1/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: message
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessage(data.text, 'ai');
+                    
+                    // Play audio if available
+                    if (data.audio) {
+                        playAudio(data.audio);
+                    }
+                } else {
+                    showStatus('Failed to get response', true);
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, true);
+            }
+        }
+
+        function addMessage(text, sender) {
+            const chatArea = document.getElementById('chatArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = text;
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function playAudio(base64Audio) {
+            const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
+            audio.play().catch(error => {
+                console.log('Audio playback failed:', error);
+            });
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function toggleRecording() {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        
+                        // Convert audio to base64
+                        const reader = new FileReader();
+                        reader.onload = async () => {
+                            const base64Audio = reader.result.split(',')[1]; // Remove data URL prefix
+                            
+                            try {
+                                const response = await fetch('/v1/chat', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        session_id: sessionId,
+                                        message: '', // Empty text message
+                                        audio: base64Audio
+                                    })
+                                });
+
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    addMessage(data.transcribed || '[Voice message]', 'user');
+                                    addMessage(data.text, 'ai');
+                                    
+                                    // Play audio response
+                                    if (data.audio) {
+                                        playAudio(data.audio);
+                                    }
+                                } else {
+                                    const errorData = await response.json();
+                                    showStatus('Voice recognition failed: ' + (errorData.detail || 'Unknown error'), true);
+                                }
+                            } catch (error) {
+                                showStatus('Error processing voice: ' + error.message, true);
+                            }
+                        };
+                        
+                        reader.readAsDataURL(audioBlob);
+                        audioChunks = [];
+                    };
+                    
+                    mediaRecorder.start();
+                    isRecording = true;
+                    document.getElementById('recordBtn').textContent = '⏹️ Stop Recording';
+                    document.getElementById('recordBtn').classList.add('recording');
+                } catch (error) {
+                    showStatus('Microphone access denied', true);
+                }
+            } else {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                document.getElementById('recordBtn').textContent = '🎤 Start Recording';
+                document.getElementById('recordBtn').classList.remove('recording');
+            }
+        }
+    </script>
+</body>
+</html> 

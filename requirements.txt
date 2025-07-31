@@ -1,0 +1,13 @@
+﻿fastapi
+uvicorn
+python-dotenv
+pydantic
+pydantic-settings
+google-generativeai==0.3.0
+google-cloud-texttospeech==2.16.2
+google-cloud-language==2.10.0
+google-cloud-speech==2.25.0
+sqlcipher3-wheels
+mangum
+streamlit
+pytest
