@@ -106,16 +106,16 @@ def transcribe_audio(audio_b64: str, language_code: str = "en-US") -> Optional[s
                 else:
                     print("No results from speech API")
                     
-                               except Exception as e:
-                       print(f"Failed with encoding {encoding}: {e}")
-                       continue
-               
-               print("All encodings failed")
-               return None
+            except Exception as e:
+                print(f"Failed with encoding {encoding}: {e}")
+                continue
         
-               except Exception as e:
-               print(f"Speech-to-text error: {e}")
-               return None
+        print("All encodings failed")
+        return None
+        
+    except Exception as e:
+        print(f"Speech-to-text error: {e}")
+        return None
 
 
 def is_audio_valid(audio_b64: str) -> bool:
@@ -124,22 +124,22 @@ def is_audio_valid(audio_b64: str) -> bool:
         # Try to decode base64
         audio_data = base64.b64decode(audio_b64)
         
-                       print(f"Audio validation: {len(audio_data)} bytes")
-               
-               # Check if we have some reasonable amount of data
-               if len(audio_data) < 100:  # Too small
-                   print(f"Audio too small: {len(audio_data)} bytes")
-                   return False
-               if len(audio_data) > 10 * 1024 * 1024:  # Too large (>10MB)
-                   print(f"Audio too large: {len(audio_data)} bytes")
-                   return False
-                   
-               print(f"Audio validation passed: {len(audio_data)} bytes")
-               return True
+        print(f"Audio validation: {len(audio_data)} bytes")
         
-               except Exception as e:
-               print(f"Audio validation error: {e}")
-               return False
+        # Check if we have some reasonable amount of data
+        if len(audio_data) < 100:  # Too small
+            print(f"Audio too small: {len(audio_data)} bytes")
+            return False
+        if len(audio_data) > 10 * 1024 * 1024:  # Too large (>10MB)
+            print(f"Audio too large: {len(audio_data)} bytes")
+            return False
+            
+        print(f"Audio validation passed: {len(audio_data)} bytes")
+        return True
+        
+    except Exception as e:
+        print(f"Audio validation error: {e}")
+        return False
 
 
 __all__ = ["transcribe_audio", "is_audio_valid"] 
