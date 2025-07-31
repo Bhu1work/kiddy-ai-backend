@@ -21,6 +21,12 @@ from app.core.guardrails import sanitize, within_daily_budget, gemini_model
 
 _LINE_RE: Final = re.compile(r"[\r\n]+")
 _MAX_LINES: Final = 3
+_EMOJI_RE: Final = re.compile(r'[^\w\s\.,!?;:()\-\'\"\n]')  # Remove emojis and special symbols
+
+
+def _remove_emojis(text: str) -> str:
+    """Remove emojis and special symbols from text to prevent TTS issues."""
+    return _EMOJI_RE.sub('', text)
 
 
 def _truncate_to_lines(text: str, max_lines: int = _MAX_LINES) -> str:  # noqa: D401
@@ -72,4 +78,7 @@ async def get_reply(session_id: str, user_text: str, buddy_name: str = "Buddy", 
     reply = gemini_model.generate_content(messages)
     raw_text: str = getattr(reply, "text", "")
 
-    return _truncate_to_lines(raw_text)
+    # Remove emojis and clean the text for TTS
+    clean_reply = _remove_emojis(raw_text)
+    
+    return _truncate_to_lines(clean_reply)
