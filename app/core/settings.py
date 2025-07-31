@@ -74,7 +74,7 @@ def get_settings() -> Settings:
     except Exception as e:
         # In development mode, allow missing env vars
         if os.getenv("DEV_MODE"):
-            print(f"⚠️  Warning: Settings validation failed: {e}")
+            print(f"Warning: Settings validation failed: {e}")
             print("   Set environment variables to enable full functionality.")
             # Return a minimal settings object for development
             return Settings(

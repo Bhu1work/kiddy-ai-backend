@@ -81,23 +81,23 @@ async def chat(req: ChatRequest):
         user_message = ""
         
         if req.audio and req.audio.strip():
-            print(f"🎤 Processing audio input (length: {len(req.audio)})")
+            print(f"Processing audio input (length: {len(req.audio)})")
             
             # Validate audio data
             if not is_audio_valid(req.audio):
-                print("❌ Audio validation failed")
+                print("Audio validation failed")
                 raise HTTPException(status_code=400, detail="Invalid audio data")
             
             # Transcribe audio to text
-            print("🔄 Transcribing audio...")
+            print("Transcribing audio...")
             transcribed_text = transcribe_audio(req.audio)
-            print(f"📝 Transcription result: '{transcribed_text}'")
+            print(f"Transcription result: '{transcribed_text}'")
             
             if transcribed_text:
                 user_message = transcribed_text
-                print(f"✅ Using transcribed text: '{user_message}'")
+                print(f"Using transcribed text: '{user_message}'")
             else:
-                print("❌ Transcription returned None")
+                print("Transcription returned None")
                 raise HTTPException(status_code=400, detail="Could not understand audio. Please try speaking clearly!")
         
         elif req.message and req.message.strip():

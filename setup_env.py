@@ -34,18 +34,18 @@ DEV_MODE=true
     
     env_path = Path(".env")
     if env_path.exists():
-        print("⚠️  .env file already exists. Skipping creation.")
+        print(".env file already exists. Skipping creation.")
         return
     
     with open(env_path, "w", encoding="utf-8") as f:
         f.write(env_content)
     
-    print("✅ Created .env file with template values.")
-    print("📝 Please edit the .env file with your actual API keys and credentials.")
+    print("Created .env file with template values.")
+    print("Please edit the .env file with your actual API keys and credentials.")
 
 def check_environment():
     """Check if required environment variables are set."""
-    print("🔍 Checking environment variables...")
+    print("Checking environment variables...")
     
     required_vars = [
         "GOOGLE_API_KEY",
@@ -58,31 +58,31 @@ def check_environment():
             missing_vars.append(var)
     
     if missing_vars:
-        print("❌ Missing required environment variables:")
+        print("Missing required environment variables:")
         for var in missing_vars:
             print(f"   - {var}")
-        print("\n📖 See ENVIRONMENT_SETUP.md for setup instructions.")
+        print("\nSee ENVIRONMENT_SETUP.md for setup instructions.")
         return False
     else:
-        print("✅ All required environment variables are set!")
+        print("All required environment variables are set!")
         return True
 
 def test_settings():
     """Test if settings can be loaded successfully."""
-    print("🧪 Testing settings configuration...")
+    print("Testing settings configuration...")
     
     try:
         from app.core.settings import get_settings
         settings = get_settings()
-        print("✅ Settings loaded successfully!")
+        print("Settings loaded successfully!")
         return True
     except Exception as e:
-        print(f"❌ Failed to load settings: {e}")
+        print(f"Failed to load settings: {e}")
         return False
 
 def main():
     """Main function."""
-    print("🚀 Kiddy AI Backend Environment Setup")
+    print("Kiddy AI Backend Environment Setup")
     print("=" * 40)
     
     # Create .env file if it doesn't exist
@@ -96,10 +96,10 @@ def main():
     
     print("\n" + "=" * 40)
     if env_ok and settings_ok:
-        print("🎉 Environment setup complete! You can now run your application.")
+        print("Environment setup complete! You can now run your application.")
     else:
-        print("⚠️  Environment setup incomplete. Please follow the instructions above.")
-        print("\n💡 Quick fix: Set DEV_MODE=true in your .env file for development.")
+        print("Environment setup incomplete. Please follow the instructions above.")
+        print("\nQuick fix: Set DEV_MODE=true in your .env file for development.")
 
 if __name__ == "__main__":
     main() 

@@ -32,11 +32,11 @@ def transcribe_audio(audio_b64: str, language_code: str = "en-US") -> Optional[s
     """
     
     try:
-        print(f"🎤 Starting transcription for {len(audio_b64)} base64 chars")
+        print(f"Starting transcription for {len(audio_b64)} base64 chars")
         
         # Decode base64 audio
         audio_data = base64.b64decode(audio_b64)
-        print(f"📦 Decoded audio: {len(audio_data)} bytes")
+        print(f"Decoded audio: {len(audio_data)} bytes")
         
         # Configure audio recognition
         audio = speech.RecognitionAudio(content=audio_data)
@@ -50,7 +50,7 @@ def transcribe_audio(audio_b64: str, language_code: str = "en-US") -> Optional[s
         
         for encoding in encodings_to_try:
             try:
-                print(f"🔄 Trying encoding: {encoding}")
+                print(f"Trying encoding: {encoding}")
                 
                 # Configure recognition settings optimized for children
                 config = speech.RecognitionConfig(
@@ -81,11 +81,11 @@ def transcribe_audio(audio_b64: str, language_code: str = "en-US") -> Optional[s
                     )]
                 )
         
-                print("🔄 Calling Google Speech API...")
+                print("Calling Google Speech API...")
                 # Perform transcription
                 client = _get_client()
                 response = client.recognize(config=config, audio=audio)
-                print(f"📡 API response received: {len(response.results)} results")
+                print(f"API response received: {len(response.results)} results")
                 
                 # Extract the best transcription
                 if response.results:
@@ -94,28 +94,28 @@ def transcribe_audio(audio_b64: str, language_code: str = "en-US") -> Optional[s
                     if best_result.alternatives:
                         transcribed_text = best_result.alternatives[0].transcript.strip()
                         confidence = best_result.alternatives[0].confidence
-                        print(f"🎯 Best transcription: '{transcribed_text}' (confidence: {confidence:.2f})")
+                        print(f"Best transcription: '{transcribed_text}' (confidence: {confidence:.2f})")
                         
                         # Basic validation - ensure we got meaningful text
                         if len(transcribed_text) > 0:
                             return transcribed_text
                         else:
-                            print("❌ Transcription is empty")
+                            print("Transcription is empty")
                     else:
-                        print("❌ No alternatives in best result")
+                        print("No alternatives in best result")
                 else:
-                    print("❌ No results from speech API")
+                    print("No results from speech API")
                     
-            except Exception as e:
-                print(f"❌ Failed with encoding {encoding}: {e}")
-                continue
+                               except Exception as e:
+                       print(f"Failed with encoding {encoding}: {e}")
+                       continue
+               
+               print("All encodings failed")
+               return None
         
-        print("❌ All encodings failed")
-        return None
-        
-    except Exception as e:
-        print(f"❌ Speech-to-text error: {e}")
-        return None
+               except Exception as e:
+               print(f"Speech-to-text error: {e}")
+               return None
 
 
 def is_audio_valid(audio_b64: str) -> bool:
@@ -124,22 +124,22 @@ def is_audio_valid(audio_b64: str) -> bool:
         # Try to decode base64
         audio_data = base64.b64decode(audio_b64)
         
-        print(f"🔍 Audio validation: {len(audio_data)} bytes")
+                       print(f"Audio validation: {len(audio_data)} bytes")
+               
+               # Check if we have some reasonable amount of data
+               if len(audio_data) < 100:  # Too small
+                   print(f"Audio too small: {len(audio_data)} bytes")
+                   return False
+               if len(audio_data) > 10 * 1024 * 1024:  # Too large (>10MB)
+                   print(f"Audio too large: {len(audio_data)} bytes")
+                   return False
+                   
+               print(f"Audio validation passed: {len(audio_data)} bytes")
+               return True
         
-        # Check if we have some reasonable amount of data
-        if len(audio_data) < 100:  # Too small
-            print(f"❌ Audio too small: {len(audio_data)} bytes")
-            return False
-        if len(audio_data) > 10 * 1024 * 1024:  # Too large (>10MB)
-            print(f"❌ Audio too large: {len(audio_data)} bytes")
-            return False
-            
-        print(f"✅ Audio validation passed: {len(audio_data)} bytes")
-        return True
-        
-    except Exception as e:
-        print(f"❌ Audio validation error: {e}")
-        return False
+               except Exception as e:
+               print(f"Audio validation error: {e}")
+               return False
 
 
 __all__ = ["transcribe_audio", "is_audio_valid"] 
