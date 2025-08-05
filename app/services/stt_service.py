@@ -17,7 +17,27 @@ def _get_client():
     """Get or create the speech-to-text client."""
     global _stt_client
     if _stt_client is None:
-        _stt_client = speech.SpeechClient()
+        # Explicitly set the credentials path
+        import os
+        from google.oauth2 import service_account
+        
+        # Get the credentials path from environment
+        creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "/app/dev-credentials.json")
+        
+        # Ensure we're using the correct path inside the container
+        if not os.path.exists(creds_path):
+            # Try alternative paths
+            alt_paths = ["/app/dev-credentials.json", "./kiddy-service.json", "kiddy-service.json"]
+            for alt_path in alt_paths:
+                if os.path.exists(alt_path):
+                    creds_path = alt_path
+                    break
+        
+        # Create credentials from the service account file
+        credentials = service_account.Credentials.from_service_account_file(creds_path)
+        
+        # Create client with explicit credentials
+        _stt_client = speech.SpeechClient(credentials=credentials)
     return _stt_client
 
 def transcribe_audio(audio_b64: str, language_code: str = "en-US") -> Optional[str]:

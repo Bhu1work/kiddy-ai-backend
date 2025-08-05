@@ -1,0 +1,70 @@
+service: kiddy-ai-backend
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  
+  # Environment variables
+  environment:
+    DEV_MODE: '0'
+    GOOGLE_API_KEY: ${env:GOOGLE_API_KEY}
+    GOOGLE_APPLICATION_CREDENTIALS: ${env:GOOGLE_APPLICATION_CREDENTIALS}
+    GOOGLE_TTS_VOICE: ${env:GOOGLE_TTS_VOICE, 'en-US-Standard-F'}
+    GOOGLE_TTS_PROJECT: ${env:GOOGLE_TTS_PROJECT, ''}
+    MAX_TOKENS_PER_DAY: ${env:MAX_TOKENS_PER_DAY, '4096'}
+    LOG_RETENTION_DAYS: ${env:LOG_RETENTION_DAYS, '3'}
+    KIDDY_DB_PATH: '/tmp/kiddy.db'
+    SQLCIPHER_KEY: ${env:SQLCIPHER_KEY, 'demo-key-replace-me'}
+
+  # IAM role permissions
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "arn:aws:logs:*:*:*"
+
+  # Lambda function settings
+  memorySize: 512
+  timeout: 30
+
+functions:
+  api:
+    handler: api/index.lambda_handler
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: '*'
+      - httpApi:
+          path: /
+          method: GET
+      - httpApi:
+          path: /health
+          method: GET
+      - httpApi:
+          path: /docs
+          method: GET
+      - httpApi:
+          path: /openapi.json
+          method: GET
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    layer:
+      name: kiddy-dependencies
+      description: Python dependencies for Kiddy AI Backend
+    noDeploy:
+      - coverage
+      - pytest
+      - pytest-cov 

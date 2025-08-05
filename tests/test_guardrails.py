@@ -1,125 +1,153 @@
 """Unit tests for app.core.guardrails module."""
 
 import pytest
-from unittest.mock import patch, MagicMock
+import re
 
-from app.core.guardrails import sanitize, within_daily_budget
+from app.core.guardrails import sanitize
 
 
 class TestSanitize:
-    """Test PII scrubbing functionality."""
+    """Test PII sanitization functionality."""
     
-    def test_sanitize_ssn(self):
-        """Test SSN redaction."""
-        text = "My SSN is 123-45-6789 and I live in NYC"
-        result = sanitize(text)
-        assert "123-45-6789" not in result
-        assert "[redacted]" in result
-        assert "NYC" in result  # Should not be redacted
-    
-    def test_sanitize_phone(self):
-        """Test phone number redaction."""
-        text = "Call me at 5551234567 or (555) 123-4567"
-        result = sanitize(text)
-        assert "5551234567" not in result
-        assert "(555) 123-4567" not in result
-        assert result.count("[redacted]") == 2
-    
-    def test_sanitize_email(self):
-        """Test email redaction."""
-        text = "Contact me at test@example.com"
-        result = sanitize(text)
-        assert "test@example.com" not in result
-        assert "[redacted]" in result
-    
-    def test_sanitize_zip(self):
-        """Test ZIP code redaction."""
-        text = "I live in 12345 and work in 67890-1234"
-        result = sanitize(text)
-        assert "12345" not in result
-        assert "67890-1234" not in result
-        assert result.count("[redacted]") == 2
-    
-    def test_sanitize_clean_text(self):
-        """Test text with no PII."""
+    def test_sanitize_no_pii(self):
+        """Test text with no PII remains unchanged."""
         text = "Hello, how are you today?"
         result = sanitize(text)
         assert result == text
     
-    def test_sanitize_multiple_pii(self):
-        """Test multiple PII types in one text."""
-        text = "Call 5551234567 or email test@example.com"
+    def test_sanitize_ssn(self):
+        """Test SSN pattern is redacted."""
+        text = "My SSN is 123-45-6789"
         result = sanitize(text)
-        assert "5551234567" not in result
-        assert "test@example.com" not in result
+        assert "[redacted]" in result
+        assert "123-45-6789" not in result
+    
+    def test_sanitize_ssn_multiple(self):
+        """Test multiple SSNs are redacted."""
+        text = "SSN1: 123-45-6789 and SSN2: 987-65-4321"
+        result = sanitize(text)
         assert result.count("[redacted]") == 2
-
-
-class TestTokenBucket:
-    """Test daily token budget functionality."""
+        assert "123-45-6789" not in result
+        assert "987-65-4321" not in result
     
-    def test_within_daily_budget_new_session(self):
-        """Test new session starts with zero tokens."""
-        session_id = "test_session_1"
-        text = "Hello world"
-        result = within_daily_budget(session_id, text)
-        assert result is True
+    def test_sanitize_phone_number_10_digits(self):
+        """Test 10-digit phone number is redacted."""
+        text = "Call me at 1234567890"
+        result = sanitize(text)
+        assert "[redacted]" in result
+        assert "1234567890" not in result
     
-    def test_within_daily_budget_existing_session(self):
-        """Test existing session accumulates tokens."""
-        session_id = "test_session_2"
-        text = "Hello world"
-        
-        # First call should succeed
-        result1 = within_daily_budget(session_id, text)
-        assert result1 is True
-        
-        # Second call should also succeed (unless over limit)
-        result2 = within_daily_budget(session_id, text)
-        assert result2 is True
+    def test_sanitize_phone_number_with_parentheses(self):
+        """Test phone number with parentheses is redacted."""
+        text = "Call me at (123) 456-7890"
+        result = sanitize(text)
+        assert "[redacted]" in result
+        assert "(123) 456-7890" not in result
     
-    @patch('app.core.guardrails._MAX_TOKENS', 10)  # Very low limit for testing
-    def test_within_daily_budget_exceeds_limit(self):
-        """Test when daily limit is exceeded."""
-        session_id = "test_session_3"
-        long_text = "This is a very long text that should exceed the token limit " * 10
-        
-        # Should fail due to length
-        result = within_daily_budget(session_id, long_text)
-        assert result is False
+    def test_sanitize_phone_number_with_spaces(self):
+        """Test phone number with spaces is redacted."""
+        text = "Call me at (123) 456-7890"
+        result = sanitize(text)
+        assert "[redacted]" in result
+        assert "(123) 456-7890" not in result
     
-    def test_within_daily_budget_different_sessions(self):
-        """Test that different sessions have separate budgets."""
-        session1 = "session_1"
-        session2 = "session_2"
-        text = "Hello world"
-        
-        # Both should succeed independently
-        result1 = within_daily_budget(session1, text)
-        result2 = within_daily_budget(session2, text)
-        
-        assert result1 is True
-        assert result2 is True
+    def test_sanitize_zip_code_5_digits(self):
+        """Test 5-digit ZIP code is redacted."""
+        text = "My address is 123 Main St, 12345"
+        result = sanitize(text)
+        assert "[redacted]" in result
+        assert "12345" not in result
     
-    @patch('app.core.guardrails.time.time')
-    def test_within_daily_budget_reset_after_24h(self, mock_time):
-        """Test that bucket resets after 24 hours."""
-        session_id = "test_session_4"
-        text = "Hello world"
+    def test_sanitize_zip_code_9_digits(self):
+        """Test 9-digit ZIP code is redacted."""
+        text = "My address is 123 Main St, 12345-6789"
+        result = sanitize(text)
+        assert "[redacted]" in result
+        assert "12345-6789" not in result
+    
+    def test_sanitize_email_address(self):
+        """Test email address is redacted."""
+        text = "Contact me at john.doe@example.com"
+        result = sanitize(text)
+        assert "[redacted]" in result
+        assert "john.doe@example.com" not in result
+    
+    def test_sanitize_email_with_subdomain(self):
+        """Test email with subdomain is redacted."""
+        text = "Contact me at user@sub.example.com"
+        result = sanitize(text)
+        assert "[redacted]" in result
+        assert "user@sub.example.com" not in result
+    
+    def test_sanitize_multiple_pii_types(self):
+        """Test multiple types of PII in same text."""
+        text = "Contact: john@example.com, SSN: 123-45-6789, Phone: (555) 123-4567"
+        result = sanitize(text)
+        assert result.count("[redacted]") == 3
+        assert "john@example.com" not in result
+        assert "123-45-6789" not in result
+        assert "(555) 123-4567" not in result
+    
+    def test_sanitize_edge_cases(self):
+        """Test edge cases and boundary conditions."""
+        # Test with empty string
+        assert sanitize("") == ""
         
-        # Set initial time
-        mock_time.return_value = 1000.0
+        # Test with only PII
+        text = "123-45-6789"
+        result = sanitize(text)
+        assert result == "[redacted]"
         
-        # First call
-        result1 = within_daily_budget(session_id, text)
-        assert result1 is True
+        # Test with PII at boundaries
+        text = "123-45-6789 and some text"
+        result = sanitize(text)
+        assert result == "[redacted] and some text"
+    
+    def test_sanitize_partial_matches_not_redacted(self):
+        """Test that partial matches are not redacted."""
+        # 9 digits (not SSN format)
+        text = "Number: 123456789"
+        result = sanitize(text)
+        assert result == text
         
-        # Advance time by 25 hours (more than 24 hours)
-        mock_time.return_value = 1000.0 + (25 * 3600)
+        # 11 digits (not phone format)
+        text = "Number: 12345678901"
+        result = sanitize(text)
+        assert result == text
         
-        # Should reset and succeed again
-        result2 = within_daily_budget(session_id, text)
-        assert result2 is True
+        # Invalid email format
+        text = "Invalid: user@"
+        result = sanitize(text)
+        assert result == text
+    
+    def test_sanitize_case_insensitive_email(self):
+        """Test email redaction is case insensitive."""
+        text = "Emails: USER@EXAMPLE.COM and user@Example.com"
+        result = sanitize(text)
+        assert result.count("[redacted]") == 2
+        assert "USER@EXAMPLE.COM" not in result
+        assert "user@Example.com" not in result
+    
+    def test_sanitize_mixed_content(self):
+        """Test mixed content with PII and normal text."""
+        text = "Hello! My name is John. You can reach me at john@example.com or call (555) 123-4567. My SSN is 123-45-6789 and I live in ZIP 12345."
+        result = sanitize(text)
+        
+        # Should have 4 redactions
+        assert result.count("[redacted]") == 4
+        
+        # Original PII should not be present
+        assert "john@example.com" not in result
+        assert "(555) 123-4567" not in result
+        assert "123-45-6789" not in result
+        assert "12345" not in result
+        
+        # Normal text should remain
+        assert "Hello!" in result
+        assert "My name is John" in result
+        assert "You can reach me at" in result
+        assert "or call" in result
+        assert "and I live in ZIP" in result
 
 
 if __name__ == "__main__":

@@ -153,17 +153,17 @@ curl -X POST http://localhost:8000/v1/setup \
 ## Safety & Compliance
 
 ### COPPA Compliance
-- ✅ No personal data collection
-- ✅ Local-only storage
-- ✅ Child-safe content filtering
-- ✅ Parental controls
-- ✅ Age-appropriate responses
+- No personal data collection
+- Local-only storage
+- Child-safe content filtering
+- Parental controls
+- Age-appropriate responses
 
 ### Content Safety
-- ✅ Violence prevention
-- ✅ Inappropriate content blocking
-- ✅ Privacy protection
-- ✅ Emotional safety
+- Violence prevention
+- Inappropriate content blocking
+- Privacy protection
+- Emotional safety
 
 ## Deployment
 

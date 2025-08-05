@@ -1,0 +1,79 @@
+services:
+  # Development service
+  kiddy-ai-dev:
+    build:
+      context: .
+      target: development
+    ports:
+      - "8000:8000"
+    environment:
+      - DEV_MODE=1
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-dev-key}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-/app/dev-credentials.json}
+      - GOOGLE_TTS_VOICE=${GOOGLE_TTS_VOICE:-en-US-Standard-F}
+      - GOOGLE_TTS_PROJECT=${GOOGLE_TTS_PROJECT:-}
+      - MAX_TOKENS_PER_DAY=${MAX_TOKENS_PER_DAY:-4096}
+      - LOG_RETENTION_DAYS=${LOG_RETENTION_DAYS:-3}
+    volumes:
+      - ./app:/app/app
+      - ./public:/app/public
+      - ./tests:/app/tests
+      - ./requirements.txt:/app/requirements.txt
+      - ./kiddy-service.json:/app/dev-credentials.json
+    profiles:
+      - dev
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Production service
+  kiddy-ai-prod:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8000:8000"
+    environment:
+      - DEV_MODE=0
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+      - GOOGLE_TTS_VOICE=${GOOGLE_TTS_VOICE:-en-US-Standard-F}
+      - GOOGLE_TTS_PROJECT=${GOOGLE_TTS_PROJECT}
+      - MAX_TOKENS_PER_DAY=${MAX_TOKENS_PER_DAY:-4096}
+      - LOG_RETENTION_DAYS=${LOG_RETENTION_DAYS:-3}
+    profiles:
+      - prod
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Test service (for running tests in container)
+  kiddy-ai-test:
+    build:
+      context: .
+      target: development
+    environment:
+      - DEV_MODE=1
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-test-key}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-/app/test-credentials.json}
+      - GOOGLE_TTS_VOICE=${GOOGLE_TTS_VOICE:-en-US-Standard-F}
+      - MAX_TOKENS_PER_DAY=${MAX_TOKENS_PER_DAY:-4096}
+      - LOG_RETENTION_DAYS=${LOG_RETENTION_DAYS:-3}
+    volumes:
+      - ./tests:/app/tests
+      - ./app:/app/app
+    profiles:
+      - test
+    command: ["pytest", "tests/", "-v", "--cov=app", "--cov-report=term-missing"]
+
+networks:
+  default:
+    name: kiddy-ai-network 

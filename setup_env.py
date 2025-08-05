@@ -1,105 +1,108 @@
 #!/usr/bin/env python3
-"""
-Environment Setup Helper Script
-
-This script helps you set up the required environment variables for the Kiddy AI Backend.
-"""
+"""Environment setup script for Kiddy AI Backend."""
 
 import os
-import sys
+import json
 from pathlib import Path
 
 def create_env_file():
-    """Create a .env file with template values."""
-    env_content = """# Google API Configuration
-# Get your API key from: https://makersuite.google.com/app/apikey
-GOOGLE_API_KEY=your_google_api_key_here
+    """Create .env file with user's credentials."""
+    
+    # Copy credentials file to local directory if it doesn't exist
+    local_creds_path = Path("./kiddy-service.json")
+    if not local_creds_path.exists():
+        source_creds_path = Path(r"C:\Users\bhuva\.gcp\kiddy-service.json")
+        if source_creds_path.exists():
+            import shutil
+            shutil.copy2(source_creds_path, local_creds_path)
+            print("Copied credentials file to local directory!")
+        else:
+            print("Warning: Could not find source credentials file!")
+    
+    env_content = f"""# Google API Configuration
+GOOGLE_API_KEY=AIzaSyCAqJ5ig6_irxVziwHFvxXknLxoPYwYDug
 
-# Google Cloud Credentials
-# Download your service account key from Google Cloud Console
-# and place the JSON file in your project directory
-GOOGLE_APPLICATION_CREDENTIALS=path/to/your/service-account-key.json
+# Google Cloud Service Account (for TTS, Speech, Language APIs)
+GOOGLE_APPLICATION_CREDENTIALS=/app/dev-credentials.json
 
-# Optional: Google Cloud Text-to-Speech settings
+# Google Cloud Text-to-Speech Configuration
 GOOGLE_TTS_VOICE=en-US-Standard-F
-GOOGLE_TTS_PROJECT=your-gcp-project-id
+GOOGLE_TTS_PROJECT=
 
-# Development settings
+# Application Settings
 MAX_TOKENS_PER_DAY=4096
 LOG_RETENTION_DAYS=3
 
-# Development mode (allows missing env vars with warnings)
-DEV_MODE=true
+# Development Mode (set to 1 for development, 0 for production)
+DEV_MODE=1
 """
     
-    env_path = Path(".env")
-    if env_path.exists():
-        print(".env file already exists. Skipping creation.")
-        return
-    
-    with open(env_path, "w", encoding="utf-8") as f:
+    # Write .env file
+    with open('.env', 'w') as f:
         f.write(env_content)
     
-    print("Created .env file with template values.")
-    print("Please edit the .env file with your actual API keys and credentials.")
+    print("Created .env file with your credentials!")
+    print("Location: .env")
+    print("API Key: AIzaSyCAqJ5ig6_irxVziwHFvxXknLxoPYwYDug")
+    print("Credentials: ./kiddy-service.json")
 
-def check_environment():
-    """Check if required environment variables are set."""
-    print("Checking environment variables...")
+def verify_credentials():
+    """Verify that the credentials file exists and is valid JSON."""
     
-    required_vars = [
-        "GOOGLE_API_KEY",
-        "GOOGLE_APPLICATION_CREDENTIALS"
-    ]
+    # First check if local file exists
+    local_creds_path = Path("./kiddy-service.json")
+    if local_creds_path.exists():
+        try:
+            with open(local_creds_path, 'r') as f:
+                json.load(f)
+            print("Local credentials file is valid JSON!")
+            return True
+        except json.JSONDecodeError:
+            print("Error: Local credentials file is not valid JSON!")
+            print(f"   Please check: {local_creds_path}")
+            return False
     
-    missing_vars = []
-    for var in required_vars:
-        if not os.getenv(var):
-            missing_vars.append(var)
+    # Fallback to original location
+    creds_path = Path(r"C:\Users\bhuva\.gcp\kiddy-service.json")
     
-    if missing_vars:
-        print("Missing required environment variables:")
-        for var in missing_vars:
-            print(f"   - {var}")
-        print("\nSee ENVIRONMENT_SETUP.md for setup instructions.")
+    if not creds_path.exists():
+        print("Error: Credentials file not found!")
+        print(f"   Expected location: {creds_path}")
+        print("   Please ensure the file exists and try again.")
         return False
-    else:
-        print("All required environment variables are set!")
-        return True
-
-def test_settings():
-    """Test if settings can be loaded successfully."""
-    print("Testing settings configuration...")
     
     try:
-        from app.core.settings import get_settings
-        settings = get_settings()
-        print("Settings loaded successfully!")
+        with open(creds_path, 'r') as f:
+            json.load(f)
+        print("Credentials file is valid JSON!")
         return True
-    except Exception as e:
-        print(f"Failed to load settings: {e}")
+    except json.JSONDecodeError:
+        print("Error: Credentials file is not valid JSON!")
+        print(f"   Please check: {creds_path}")
         return False
 
 def main():
-    """Main function."""
-    print("Kiddy AI Backend Environment Setup")
-    print("=" * 40)
+    """Main setup function."""
+    print("Setting up Kiddy AI Backend Environment...")
+    print()
     
-    # Create .env file if it doesn't exist
+    # Verify credentials
+    if not verify_credentials():
+        return
+    
+    # Create .env file
     create_env_file()
     
-    # Check environment variables
-    env_ok = check_environment()
-    
-    # Test settings
-    settings_ok = test_settings()
-    
-    print("\n" + "=" * 40)
-    if env_ok and settings_ok:
-        print("Environment setup complete! You can now run your application.")
-    else:
-        print("Environment setup incomplete. Please follow the instructions above.")
-        print("\nQuick fix: Set DEV_MODE=true in your .env file for development.")
+    print()
+    print("Environment setup complete!")
+    print()
+    print("Next steps:")
+    print("   1. Run: docker-compose up kiddy-ai-dev")
+    print("   2. Open: http://localhost:8000")
+    print("   3. Check health: http://localhost:8000/health")
+    print()
+    print("For production:")
+    print("   docker-compose --profile prod up kiddy-ai-prod")
 
 if __name__ == "__main__":
     main() 

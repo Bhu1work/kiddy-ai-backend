@@ -91,4 +91,10 @@ def fetch_last(session_id: str, limit: int = 100) -> list[tuple[int, str]]:
     return cur.fetchall()
 
 
-__all__ = ["insert", "fetch_last"]
+def get_logs(session_id: str) -> list[str]:
+    """Return all logs for a session as formatted strings."""
+    logs = fetch_last(session_id, limit=1000)  # Get all logs
+    return [text for _, text in logs]
+
+
+__all__ = ["insert", "fetch_last", "get_logs"]

@@ -1,38 +1,38 @@
-# 🎮 Kiddy Backend - Project Status
+# Kiddy Backend - Project Status
 
-## ✅ **COMPLETED FEATURES**
+## **COMPLETED FEATURES**
 
 ### Core Architecture
-- ✅ **FastAPI backend** with proper package structure
-- ✅ **Windows-compatible** imports and reload support
-- ✅ **COPPA-compliant** system prompt and safety filters
-- ✅ **Stateless design** with in-memory session management
+- **FastAPI backend** with proper package structure
+- **Windows-compatible** imports and reload support
+- **COPPA-compliant** system prompt and safety filters
+- **Stateless design** with in-memory session management
 
 ### API Endpoints
-- ✅ **`/v1/setup`** - Parent creates session (returns UUID)
-- ✅ **`/v1/chat`** - Child sends message, gets {text, emotion, audio}
-- ✅ **`/health`** - Liveness probe for containers
-- ✅ **`/`** - Root info endpoint
+- **`/v1/setup`** - Parent creates session (returns UUID)
+- **`/v1/chat`** - Child sends message, gets {text, emotion, audio}
+- **`/health`** - Liveness probe for containers
+- **`/`** - Root info endpoint
 
 ### Safety & Privacy
-- ✅ **PII scrubbing** - SSN, phone, email, ZIP code redaction
-- ✅ **Token bucket** - 4K tokens/day per session
-- ✅ **Gemini safety filters** - 5 blocking categories
-- ✅ **Local-only storage** - SQLCipher ring buffer (3 days)
+- **PII scrubbing** - SSN, phone, email, ZIP code redaction
+- **Token bucket** - 4K tokens/day per session
+- **Gemini safety filters** - 5 blocking categories
+- **Local-only storage** - SQLCipher ring buffer (3 days)
 
 ### AI Integration
-- ✅ **Google Gemini Pro** - Kid-safe chat responses
-- ✅ **Sentiment analysis** - Maps to {cheerful, curious, affectionate}
-- ✅ **Text-to-Speech** - SSML with emotional prosody
-- ✅ **Response truncation** - ≤ 3 lines for engagement
+- **Google Gemini Pro** - Kid-safe chat responses
+- **Sentiment analysis** - Maps to {cheerful, curious, affectionate}
+- **Text-to-Speech** - SSML with emotional prosody
+- **Response truncation** - ≤ 3 lines for engagement
 
 ### Development Tools
-- ✅ **Unit tests** - PII scrub, token bucket, sentiment mapping
-- ✅ **Demo frontend** - HTML/JS chat interface
-- ✅ **Windows setup** - PowerShell environment configuration
-- ✅ **Dependencies** - All required packages installed
+- **Unit tests** - PII scrub, token bucket, sentiment mapping
+- **Demo frontend** - HTML/JS chat interface
+- **Windows setup** - PowerShell environment configuration
+- **Dependencies** - All required packages installed
 
-## 🔧 **TECHNICAL IMPLEMENTATION**
+## **TECHNICAL IMPLEMENTATION**
 
 ### File Structure
 ```
@@ -72,7 +72,7 @@ $env:MAX_TOKENS_PER_DAY = "4096"
 $env:LOG_RETENTION_DAYS = "3"
 ```
 
-## 🚀 **QUICK START**
+## **QUICK START**
 
 ### Windows Development
 ```powershell
@@ -107,20 +107,20 @@ python -m pytest tests/test_guardrails.py -v
 - Setup session with kid's info
 - Start chatting with AI buddy
 
-## 🎯 **MVP REQUIREMENTS CHECKLIST**
+## **MVP REQUIREMENTS CHECKLIST**
 
-- ✅ **Stateless backend** - No cloud data storage
-- ✅ **3-day local ring buffer** - SQLCipher encrypted
-- ✅ **Google Gemini Pro** - With 5 safety filters
-- ✅ **Sentiment → TTS mapping** - 3 emotion states
-- ✅ **≤ 3 line responses** - Truncated for engagement
-- ✅ **COPPA compliance** - No personal data collection
-- ✅ **Windows dev-friendly** - Uvicorn reload works
-- ✅ **No breaking imports** - Compatible with google-generativeai ≥ 0.4
-- ✅ **Package structure** - Proper `__init__.py` files
-- ✅ **All dependencies** - Listed in requirements.txt
+- **Stateless backend** - No cloud data storage
+- **3-day local ring buffer** - SQLCipher encrypted
+- **Google Gemini Pro** - With 5 safety filters
+- **Sentiment → TTS mapping** - 3 emotion states
+- **≤ 3 line responses** - Truncated for engagement
+- **COPPA compliance** - No personal data collection
+- **Windows dev-friendly** - Uvicorn reload works
+- **No breaking imports** - Compatible with google-generativeai ≥ 0.4
+- **Package structure** - Proper `__init__.py` files
+- **All dependencies** - Listed in requirements.txt
 
-## 🔮 **FUTURE ENHANCEMENTS**
+## **FUTURE ENHANCEMENTS**
 
 ### Optional Features
 - [ ] **Parent PIN-gate route** - `/v1/export_logs` with PIN protection
@@ -136,30 +136,30 @@ python -m pytest tests/test_guardrails.py -v
 - [ ] **Security tests** - Penetration testing
 - [ ] **Accessibility tests** - WCAG compliance
 
-## 🛡️ **SECURITY & COMPLIANCE**
+## **SECURITY & COMPLIANCE**
 
 ### COPPA Compliance
-- ✅ No persistent child data
-- ✅ No tracking or analytics
-- ✅ Parent-controlled session setup
-- ✅ Local-only storage with encryption
-- ✅ Age-appropriate content filtering
+- No persistent child data
+- No tracking or analytics
+- Parent-controlled session setup
+- Local-only storage with encryption
+- Age-appropriate content filtering
 
 ### Privacy Protection
-- ✅ PII scrubbing (SSN, phone, email, ZIP)
-- ✅ No cloud data storage
-- ✅ Encrypted local database
-- ✅ Stateless API design
-- ✅ Session-based authentication
+- PII scrubbing (SSN, phone, email, ZIP)
+- No cloud data storage
+- Encrypted local database
+- Stateless API design
+- Session-based authentication
 
 ### Content Safety
-- ✅ Gemini safety filters (5 categories)
-- ✅ COPPA-compliant system prompt
-- ✅ No mature content references
-- ✅ Kid-friendly response style
-- ✅ Automatic content redirection
+- Gemini safety filters (5 categories)
+- COPPA-compliant system prompt
+- No mature content references
+- Kid-friendly response style
+- Automatic content redirection
 
-## 📊 **PERFORMANCE METRICS**
+## **PERFORMANCE METRICS**
 
 ### Response Times
 - **Setup**: ~100ms (session creation)
@@ -178,6 +178,6 @@ python -m pytest tests/test_guardrails.py -v
 
 ---
 
-**Status**: ✅ **MVP v0.1 COMPLETE** - Ready for development and testing!
+**Status**: **MVP v0.1 COMPLETE** - Ready for development and testing!
 
 **Next Steps**: Set up environment variables and test the full workflow. 

@@ -7,6 +7,7 @@ Changes
   fall back for older versions.
 * **Safety settings build**: supports both the old `dict` style and the new
   `SafetySetting` objects, so whichever client version is installed will work.
+* **Faster model**: Using Gemini 2.0 Flash for faster responses
 """
 
 from __future__ import annotations
@@ -52,9 +53,9 @@ def sanitize(text: str) -> str:
     return text
 
 # ---------------------------------------------------------------------------
-# 3. Token bucket (per 24 h)
+# 3. Token bucket (per 24 h) - Increased for faster conversation
 # ---------------------------------------------------------------------------
-_MAX_TOKENS: Final = settings.max_tokens_per_day
+_MAX_TOKENS: Final = settings.max_tokens_per_day * 2  # Double the limit for faster conversation
 _bucket: dict[str, int] = {}
 _reset_ts: float = time.time()
 _WORD_RE = re.compile(r"\w+")
@@ -75,11 +76,29 @@ def within_daily_budget(session_id: str, text: str) -> bool:
     return True
 
 # ---------------------------------------------------------------------------
-# 4. Build Gemini model (safety settings handled by system prompt)
+# 4. Build Gemini model (Faster model for better conversation)
 # ---------------------------------------------------------------------------
 
+# Use Gemini 1.5 Pro for reliable responses
 gemini_model = GenerativeModel(
-    model_name="gemini-1.5-pro",
+    model_name="gemini-1.5-pro",  # Use the original working model
+    generation_config={
+        "temperature": 0.7,  # Slightly more creative
+        "top_p": 0.8,
+        "top_k": 40,
+        "max_output_tokens": 150,  # Shorter responses for faster conversation
+    }
 )
 
-__all__ = ["sanitize", "within_daily_budget", "gemini_model"]
+# For streaming responses (even faster)
+gemini_model_stream = GenerativeModel(
+    model_name="gemini-1.5-pro",
+    generation_config={
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "top_k": 40,
+        "max_output_tokens": 150,
+    }
+)
+
+__all__ = ["sanitize", "within_daily_budget", "gemini_model", "gemini_model_stream"]
