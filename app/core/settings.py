@@ -1,6 +1,6 @@
 import os
 from functools import lru_cache
-from pydantic import Field
+from pydantic import Field, ConfigDict
 from pydantic_settings import BaseSettings
 from pathlib import Path
 from dotenv import load_dotenv
@@ -20,23 +20,24 @@ class Settings(BaseSettings):
       failing deep in a request‑handler.
     """
 
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"  # Allow extra fields in .env file
+    )
+
     # === Google Generative AI ===
-    google_api_key: str = Field(..., env="GOOGLE_API_KEY")
+    google_api_key: str = Field(..., json_schema_extra={"env": "GOOGLE_API_KEY"})
 
     # === Google Cloud client libraries (Text‑to‑Speech, Natural Language) ===
-    gcp_credentials_json: Path = Field(..., env="GOOGLE_APPLICATION_CREDENTIALS")
-    google_tts_voice: str = Field("en-US-Standard-F", env="GOOGLE_TTS_VOICE")
-    google_tts_project: str | None = Field(None, env="GOOGLE_TTS_PROJECT")
+    gcp_credentials_json: Path = Field(..., json_schema_extra={"env": "GOOGLE_APPLICATION_CREDENTIALS"})
+    google_tts_voice: str = Field("en-US-Standard-F", json_schema_extra={"env": "GOOGLE_TTS_VOICE"})
+    google_tts_project: str | None = Field(None, json_schema_extra={"env": "GOOGLE_TTS_PROJECT"})
 
     # === Local‑only memory controls ===
-    max_tokens_per_day: int = Field(4096, env="MAX_TOKENS_PER_DAY")
-    log_retention_days: int = Field(3, env="LOG_RETENTION_DAYS")
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
-        extra = "ignore"  # Allow extra fields in .env file
+    max_tokens_per_day: int = Field(4096, json_schema_extra={"env": "MAX_TOKENS_PER_DAY"})
+    log_retention_days: int = Field(3, json_schema_extra={"env": "LOG_RETENTION_DAYS"})
 
     # --- custom validators -------------------------------------------------
     @classmethod
